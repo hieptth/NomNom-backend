@@ -167,6 +167,8 @@ paths:
 #  The API fetches a personalized list of recommended dishes for a user to try out
     /recommendations/{userId}:
       get:
+        tags:
+          - recommendations
         summary: Get recommendations
         description: Get a list of recommended dishes for a user
         parameters:
@@ -185,8 +187,10 @@ paths:
                     type: array
                     items:
                         $ref: '#/components/schemas/Food'
-    /search-foods:
+    /foods:
       get:
+        tags:
+          - food
         summary: Search for foods
         description: Get a list of foods that match the search query
         parameters:
@@ -231,8 +235,10 @@ paths:
                     type: array
                     items:
                         $ref: '#/components/schemas/Food'
-    /foods:
+    /foods/{foodId}:
       get:
+        tags:
+          - food
         summary: Get a food by ID
         description: Get a food by its unique identifier
         parameters:
@@ -252,7 +258,9 @@ paths:
                     $ref: '#/components/schemas/FoodDetailed'
     /my/foods:
       post:
-        summary: Add a food
+        tags:
+          - favorite
+        summary: Add a favorite food
         description: Add a food to the user's list of favorite foods
         requestBody:
           required: true
@@ -265,12 +273,14 @@ paths:
                     type: integer
                     description: The food ID
                     example: 8
-                    required: true
+                    required: ["true"]
         responses:
           '201': # status code
             description: The food was added successfully
       get:
-        summary: Get my foods
+        tags:
+          - favorite
+        summary: Get user favorite foods
         description: Get a list of the user's favorite foods
         responses:
           '200': # status code
@@ -281,8 +291,11 @@ paths:
                     type: array
                     items:
                         $ref: '#/components/schemas/Food'
+    /my/foods/{foodId}:
       delete:
-        summary: Delete a food
+        tags:
+          - favorite
+        summary: Delete a favorite food
         parameters:
           - name: foodId
             in: path
@@ -296,8 +309,10 @@ paths:
             '204': # status code
                 description: The food was deleted successfully
 #    TODO: /comments or /foods/{foodId}/comments, which one is easier to implement?
-    /comments:
+    /user/comments:
       post:
+        tags:
+          - user
         summary: Add a comment
         description: Add a comment to a food
         requestBody:
@@ -311,23 +326,25 @@ paths:
                     type: integer
                     description: The user ID
                     example: 5
-                    required: true
+                    required: ["true"]
                   food_id:
                     type: integer
                     description: The food ID
                     example: 8
-                    required: true
+                    required: ["true"]
                   comment:
                     type: string
                     description: The comment
                     example: "Out of this world!"
-                    required: true
+                    required: ["true"]
         responses:
           '201': # status code
             description: The comment was added successfully
 #    TODO: I anticipate that the comments will be fetched with the food details, so I'm not sure if we need a GET method for this
-    /ratings:
+    /user/ratings:
       post:
+        tags:
+          - user
         summary: Add a rating
         description: Add a rating to a food
         requestBody:
@@ -341,17 +358,17 @@ paths:
                     type: integer
                     description: The user ID
                     example: 5
-                    required: true
+                    required: ["true"]
                   food_id:
                     type: integer
                     description: The food ID
                     example: 8
-                    required: true
+                    required: ["true"]
                   rating:
                     type: integer
                     description: The rating
                     example: 4
-                    required: true
+                    required: ["true"]
         responses:
           '201': # status code
             description: The rating was added successfully
