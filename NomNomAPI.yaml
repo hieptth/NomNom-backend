@@ -5,7 +5,7 @@ info:
   version: 0.1.9
 servers:
   - url: www.api.nomnom.com
-    description: Production server
+    description: Development server
 components:
   schemas:
     Food:
@@ -14,70 +14,91 @@ components:
         food_id:
           type: integer
           description: The unique identifier for the food
+          example: 5
         name:
           type: string
           description: The name of the food
-        picture_urls:
-          type: array
-          items:
-            type: string
+          example: "Spaghetti"
+        picture_url:
+          type: string
           description: URLs of the food's pictures
+          example: "https://www.example.com/spaghetti.jpg"
         description:
             type: string
             description: A brief description of the food
+            example: "Spaghetti is a long, thin, solid, cylindrical pasta."
         rating:
             type: number
             description: The average rating of the food
+            example: 4.5
         calories:
             type: number
             description: The number of calories in the food
+            example: 300
         sugar:
             type: number
             description: The amount of sugar in the food
+            example: 10
         protein:
             type: number
             description: The amount of protein in the food
+            example: 20
         sodium:
             type: number
             description: The amount of sodium in the food
+            example: 500
         saturated_fat:
             type: number
             description: The amount of fat in the food
+            example: 5
     FoodDetailed:
       type: object
       properties:
         food_id:
           type: integer
           description: The unique identifier for the food
+          example: 5
         name:
           type: string
           description: The name of the food
+          example: "Spaghetti"
         picture_urls:
           type: array
           items:
             type: string
           description: URLs of the food's pictures
+          example: ["https://www.example.com/spaghetti.jpg", "https://www.example.com/spaghetti2.jpg"]
         description:
             type: string
             description: A brief description of the food
+            example: "Spaghetti is a long, thin, solid, cylindrical pasta."
         rating:
             type: number
             description: The average rating of the food
+            example: 4.5
         calories:
             type: number
             description: The number of calories in the food
+            example: 300
         sugar:
             type: number
             description: The amount of sugar in the food
+            example: 10
         protein:
             type: number
             description: The amount of protein in the food
+            example: 20
         sodium:
             type: number
             description: The amount of sodium in the food
+            example: 500
         saturated_fat:
             type: number
             description: The amount of fat in the food
+            example: 5
+        user_rating:
+            type: integer
+            description: The user's rating for the food
         ratings:
           type: array
           description: The rating counts for the food
@@ -111,7 +132,7 @@ components:
           type: string
           description: The comment
           example: "Out of this world!"
-        date:
+        timestamp:
           type: string
           format: date-time
           description: The date and time the comment is made
@@ -135,7 +156,7 @@ components:
               type: number
               description: The rating
               example: 4
-            date:
+            timestamp:
               type: string
               format: date-time
               description: The date and time the rating is made
@@ -175,6 +196,7 @@ paths:
               description: The search query
               schema:
                 type: string
+              example: "italian"
             - name: search_type
               in: query
               required: true
@@ -182,6 +204,7 @@ paths:
               schema:
                   type: string
                   pattern: '^(keyword|category)$'
+              example: "category"
             - name: limit
               in: query
               required: false
@@ -190,6 +213,7 @@ paths:
                 type: integer
                 minimum: 10
                 maximum: 20
+              example: 10
             - name: offset
               in: query
               required: false
@@ -197,6 +221,7 @@ paths:
               schema:
                 type: integer
                 minimum: 0
+              example: 0
         responses:
           '200': # status code
             description: A JSON array of foods
@@ -217,6 +242,7 @@ paths:
               description: The food ID
               schema:
                 type: integer
+              example: 8
         responses:
           '200': # status code
             description: A JSON object of the food
@@ -235,14 +261,11 @@ paths:
               schema:
                 type: object
                 properties:
-#                  user_id:
-#                    type: integer
-#                    description: The user ID
-#                    example: 5
                   food_id:
                     type: integer
                     description: The food ID
                     example: 8
+                    required: true
         responses:
           '201': # status code
             description: The food was added successfully
@@ -259,7 +282,7 @@ paths:
                     items:
                         $ref: '#/components/schemas/Food'
       delete:
-        summary: Delete a food from the favorite list
+        summary: Delete a food
         parameters:
           - name: foodId
             in: path
@@ -288,15 +311,47 @@ paths:
                     type: integer
                     description: The user ID
                     example: 5
+                    required: true
                   food_id:
                     type: integer
                     description: The food ID
                     example: 8
+                    required: true
                   comment:
                     type: string
                     description: The comment
                     example: "Out of this world!"
+                    required: true
         responses:
           '201': # status code
             description: The comment was added successfully
-#    TODO: I anticipate that the comments will be fetched with the food details, so I'm not sure if we need a separate endpoint for this
+#    TODO: I anticipate that the comments will be fetched with the food details, so I'm not sure if we need a GET method for this
+    /ratings:
+      post:
+        summary: Add a rating
+        description: Add a rating to a food
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                    description: The user ID
+                    example: 5
+                    required: true
+                  food_id:
+                    type: integer
+                    description: The food ID
+                    example: 8
+                    required: true
+                  rating:
+                    type: integer
+                    description: The rating
+                    example: 4
+                    required: true
+        responses:
+          '201': # status code
+            description: The rating was added successfully
