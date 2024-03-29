@@ -51,6 +51,10 @@ components:
             type: number
             description: The amount of fat in the food
             example: 5
+        carbohydrates:
+            type: number
+            description: The amount of fat in the food
+            example: 21.1
     FoodDetailed:
       type: object
       properties:
@@ -96,6 +100,10 @@ components:
             type: number
             description: The amount of fat in the food
             example: 5
+        carbohydrates:
+            type: number
+            description: The amount of fat in the food
+            example: 21.1
         user_rating:
             type: integer
             description: The user's rating for the food
@@ -132,7 +140,7 @@ components:
           type: string
           description: The comment
           example: "Out of this world!"
-        timestamp:
+        created_at:
           type: string
           format: date-time
           description: The date and time the comment is made
@@ -156,7 +164,7 @@ components:
               type: number
               description: The rating
               example: 4
-            timestamp:
+            created_at:
               type: string
               format: date-time
               description: The date and time the rating is made
