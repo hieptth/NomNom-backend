@@ -9,7 +9,7 @@ app = Flask(__name__)
 SUPABASE_PROJECT_URL: str = os.getenv("SUPABASE_PROJECT_URL")
 SUPABASE_API_KEY: str = os.getenv("SUPABASE_API_KEY")
 supabase: Client = create_client(
-    SUPABASE_API_KEY,
+    SUPABASE_PROJECT_URL,
     SUPABASE_API_KEY
 )
 @app.route('/')
