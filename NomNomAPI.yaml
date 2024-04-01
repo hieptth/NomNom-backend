@@ -4,58 +4,11 @@ info:
   description: NomNom API Documentation
   version: 0.1.9
 servers:
-  - url: www.api.nomnom.com
+  - url: http://localhost:8080
     description: Development server
 components:
   schemas:
     Food:
-      type: object
-      properties:
-        food_id:
-          type: integer
-          description: The unique identifier for the food
-          example: 5
-        name:
-          type: string
-          description: The name of the food
-          example: "Spaghetti"
-        picture_url:
-          type: string
-          description: URLs of the food's pictures
-          example: "https://www.example.com/spaghetti.jpg"
-        description:
-            type: string
-            description: A brief description of the food
-            example: "Spaghetti is a long, thin, solid, cylindrical pasta."
-        rating:
-            type: number
-            description: The average rating of the food
-            example: 4.5
-        calories:
-            type: number
-            description: The number of calories in the food
-            example: 300
-        sugar:
-            type: number
-            description: The amount of sugar in the food
-            example: 10
-        protein:
-            type: number
-            description: The amount of protein in the food
-            example: 20
-        sodium:
-            type: number
-            description: The amount of sodium in the food
-            example: 500
-        saturated_fat:
-            type: number
-            description: The amount of fat in the food
-            example: 5
-        carbohydrates:
-            type: number
-            description: The amount of fat in the food
-            example: 21.1
-    FoodDetailed:
       type: object
       properties:
         food_id:
@@ -76,7 +29,7 @@ components:
             type: string
             description: A brief description of the food
             example: "Spaghetti is a long, thin, solid, cylindrical pasta."
-        rating:
+        average_rating:
             type: number
             description: The average rating of the food
             example: 4.5
@@ -104,23 +57,6 @@ components:
             type: number
             description: The amount of fat in the food
             example: 21.1
-        user_rating:
-            type: integer
-            description: The user's rating for the food
-        ratings:
-          type: array
-          description: The rating counts for the food
-          items:
-            type: integer
-          example: [0, 3, 2, 1, 18, 7]
-          minItems: 6
-          maxItems: 6
-        comments:
-          type: array
-          description: The comments for the food
-          items:
-            $ref: '#/components/schemas/Comment'
-          minItems: 0
     Comment:
       type: object
       properties:
@@ -170,7 +106,6 @@ components:
               description: The date and time the rating is made
               example: 2021-01-01T13:17:21Z
 
-
 paths:
 #  The API fetches a personalized list of recommended dishes for a user to try out
     /recommendations/{userId}:
@@ -186,6 +121,7 @@ paths:
               description: The user ID
               schema:
                 type: string
+                example: 12
         responses:
           '200': # status code
             description: A JSON array of user names
@@ -208,15 +144,15 @@ paths:
               description: The search query
               schema:
                 type: string
-              example: "italian"
+              example: italian
             - name: search_type
               in: query
               required: true
               description: The type of search
               schema:
                   type: string
-                  pattern: '^(keyword|category)$'
-              example: "category"
+                  enum: [keyword, category]
+              example: category
             - name: limit
               in: query
               required: false
@@ -248,7 +184,7 @@ paths:
         tags:
           - food
         summary: Get a food by ID
-        description: Get a food by its unique identifier
+        description: Fetch a food by its unique identifier
         parameters:
             - name: foodId
               in: path
@@ -263,7 +199,22 @@ paths:
             content:
               application/json:
                 schema:
-                    $ref: '#/components/schemas/FoodDetailed'
+                  allOf:
+                    - $ref: '#/components/schemas/Food'
+                    - type: object
+                      properties:
+                        user_rating:
+                          type: integer
+                          description: The user's own rating for the food
+                          example: 2
+                        ratings:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/Rating"
+                        comments:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/Comment"
     /my/foods:
       post:
         tags:
@@ -316,45 +267,51 @@ paths:
         responses:
             '204': # status code
                 description: The food was deleted successfully
-#    TODO: /comments or /foods/{foodId}/comments, which one is easier to implement?
-    /user/comments:
+    /foods/{foodId}/comments:
       post:
         tags:
           - user
         summary: Add a comment
         description: Add a comment to a food
+        parameters:
+          - in: path
+            name: foodId
+            required: true
+            example: 2
         requestBody:
           required: true
           content:
             application/json:
               schema:
                 type: object
+                required: [user_id, food_id, comment]
                 properties:
                   user_id:
                     type: integer
                     description: The user ID
                     example: 5
-                    required: ["true"]
                   food_id:
                     type: integer
                     description: The food ID
                     example: 8
-                    required: ["true"]
                   comment:
                     type: string
                     description: The comment
                     example: "Out of this world!"
-                    required: ["true"]
         responses:
           '201': # status code
             description: The comment was added successfully
-#    TODO: I anticipate that the comments will be fetched with the food details, so I'm not sure if we need a GET method for this
-    /user/ratings:
+    /foods/{foodId}/ratings:
       post:
         tags:
           - user
         summary: Add a rating
         description: Add a rating to a food
+        parameters:
+          - in: path
+            name: foodId
+            required: true
+            example: 2
         requestBody:
           required: true
           content:
