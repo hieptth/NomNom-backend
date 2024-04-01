@@ -397,6 +397,7 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /.idea
+<<<<<<< HEAD
 
 # .env file
 .env
@@ -404,3 +405,7 @@ FodyWeavers.xsd
 # venv folder
 venv
 
+=======
+.env
+.env
+>>>>>>> 2462d43 (update api doc (#2))
