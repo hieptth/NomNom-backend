@@ -72,6 +72,10 @@ components:
           type: integer
           description: The food ID
           example: 8
+        parent_comment_id:
+          type: integer
+          description: The parent's comment ID
+          example: 2
         comment:
           type: string
           description: The comment
@@ -286,6 +290,11 @@ paths:
                 type: object
                 required: [user_id, food_id, comment]
                 properties:
+                  parent_comment_id:
+                    type: integer
+                    description: The user ID
+                    nullable: true
+                    example: null
                   user_id:
                     type: integer
                     description: The user ID
