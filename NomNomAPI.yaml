@@ -4,7 +4,7 @@ info:
   description: NomNom API Documentation
   version: 0.1.9
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:5000
     description: Development server
 components:
   schemas:
@@ -196,7 +196,7 @@ paths:
               description: The food ID
               schema:
                 type: integer
-              example: 8
+              example: 44394
         responses:
           '200': # status code
             description: A JSON object of the food
