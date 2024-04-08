@@ -15,7 +15,7 @@ except None:
 
 supabase: Client = create_client(
     SUPABASE_PROJECT_URL,
-    SUPABASE_API_KEY
+    SUPABASE_API_KEY,
 )
 
 
@@ -40,7 +40,7 @@ def add_favorite_food():
     # Save to database
     # Not yet implemented logged-in user, so default to user_id = 1
     data, _ = supabase.table('user_likes_food').insert({
-        'user_id': 1,
+        'user_id': 2,
         'food_id': favorite_food_id
     }).execute()
     return json.dumps({
@@ -51,7 +51,7 @@ def add_favorite_food():
 @app.route('/my/foods', methods=["GET"])
 def get_favorite_foods():
     data, _ = (supabase.table('user_likes_food')
-     .select('*, food(*)').eq('user_id', 1).execute())
+     .select('food(*)').eq('user_id', 1).execute())
     return json.dumps(data)
 # select f.*
 # from user_likes_food ulf join food f on ulf.food_id = f.food_id
