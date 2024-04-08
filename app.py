@@ -1,3 +1,5 @@
+import json
+
 from supabase import create_client, Client
 import os
 
@@ -31,6 +33,29 @@ def get_food(food_id:int):
     # 1 for the actual json list is in the second object
     # 0 for the json is the only element in json list
 
+@app.route('/my/foods', methods=["POST"])
+def add_favorite_food():
+    request_body = request.get_json()
+    favorite_food_id = request_body['food_id']
+    # Save to database
+    # Not yet implemented logged-in user, so default to user_id = 1
+    data, _ = supabase.table('user_likes_food').insert({
+        'user_id': 1,
+        'food_id': favorite_food_id
+    }).execute()
+    return json.dumps({
+        "status": "201",
+        "message": "Successfully added to favorites"
+    })
+
+@app.route('/my/foods', methods=["GET"])
+def get_favorite_foods():
+    data, _ = (supabase.table('user_likes_food')
+     .select('*, food(*)').eq('user_id', 1).execute())
+    return json.dumps(data)
+# select f.*
+# from user_likes_food ulf join food f on ulf.food_id = f.food_id
+# where user_likes_food.user_id = 1
 
 if __name__ == '__main__':
     app.run()
