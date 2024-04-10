@@ -1,7 +1,10 @@
 import json
 
 from supabase import create_client, Client
+from itertools import groupby
 import os
+
+import pickle
 
 from flask import Flask, request
 
@@ -23,6 +26,10 @@ supabase: Client = create_client(
 def hello_world():  # put application's code here
     return 'Hello bruuuuuu'
 
+from model.model import SearchModel
+with open('/recommendation/model/model0604.pkl', 'rb') as f:
+    model: SearchModel = pickle.load(f)
+
 @app.route('/recommendations/<user_id>', methods=["GET"])
 def get_recommendations(user_id:int):
     # Fetch all user's search history
@@ -32,7 +39,24 @@ def get_recommendations(user_id:int):
     food_ids = [food_object['food']['food_id'] for food_object in response_data]
     (_, response_data), _ = supabase.table('food_tag').select('food(*), tag(*)').in_('food_id', food_ids).execute()
     # TODO: Implement a way to get the tags from the food_id
-    return json.dumps(food_ids)
+    grouped_by_response = groupby(response_data, lambda x: x['food'])
+    food_history = []
+    for food, tags in grouped_by_response:
+        tag_list = list(tags)
+        food['tags'] = list(map(lambda x: x['tag']['content'], tag_list))
+        food_history.append(food)
+    for food in food_history:
+        similar_foods = model.search(
+            name=food["name"],
+            tags=", ".join(food["tags"]),
+            nutrition=[600, 80, 10, 50, 150, 30, 50],
+            # NUTRITIONS = ['calories', 'fat', 'sugar', 'sodium', 'protein', 'saturated_fat', 'carbohydrates']
+        )[:10]  # Take 10 most similar (can take up to k)
+        names = [similar_food[0]['name'] for similar_food in similar_foods]
+        ids = [similar_food[0]['id'] for similar_food in similar_foods]
+        print(names)
+        print(ids)
+    return json.dumps(food_history)
 
 @app.route('/foods/<food_id>', methods=["GET"])
 def get_food(food_id:int):
