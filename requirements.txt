@@ -1,0 +1,6 @@
+transformers
+pandas
+numpy
+faiss-cpu
+sentence_transformers
+gdown

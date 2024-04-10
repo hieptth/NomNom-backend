@@ -23,6 +23,16 @@ supabase: Client = create_client(
 def hello_world():  # put application's code here
     return 'Hello bruuuuuu'
 
+@app.route('/recommendations/<user_id>', methods=["GET"])
+def get_recommendations(user_id:int):
+    # Fetch all user's search history
+    (_, response_data), _ = supabase.table('user_searches_food').select('food(food_id)').eq('user_id', user_id).execute()
+    # food id -> tags
+    # response_data: List of food json objects
+    food_ids = [food_object['food']['food_id'] for food_object in response_data]
+    (_, response_data), _ = supabase.table('food_tag').select('food(*), tag(*)').in_('food_id', food_ids).execute()
+    # TODO: Implement a way to get the tags from the food_id
+    return json.dumps(food_ids)
 
 @app.route('/foods/<food_id>', methods=["GET"])
 def get_food(food_id:int):
@@ -51,7 +61,7 @@ def add_favorite_food():
 @app.route('/my/foods', methods=["GET"])
 def get_favorite_foods():
     data, _ = (supabase.table('user_likes_food')
-     .select('food(*)').eq('user_id', 1).execute())
+     .select('food(*)').eq('user_id', 2).execute())
     return json.dumps(data)
 # select f.*
 # from user_likes_food ulf join food f on ulf.food_id = f.food_id
