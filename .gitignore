@@ -398,6 +398,7 @@ FodyWeavers.xsd
 *.sln.iml
 /.idea
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 # .env file
 .env
@@ -409,3 +410,10 @@ venv
 .env
 .env
 >>>>>>> 2462d43 (update api doc (#2))
+=======
+
+# Virtual Environment and .env
+.env
+venv
+
+>>>>>>> d04cfb6 (create requirements)
