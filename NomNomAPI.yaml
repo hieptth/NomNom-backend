@@ -25,39 +25,43 @@ components:
           items:
             type: string
           description: URLs of the food's pictures
-          example: ["https://www.example.com/spaghetti.jpg", "https://www.example.com/spaghetti2.jpg"]
+          example:
+            [
+              "https://www.example.com/spaghetti.jpg",
+              "https://www.example.com/spaghetti2.jpg",
+            ]
         description:
-            type: string
-            description: A brief description of the food
-            example: "Spaghetti is a long, thin, solid, cylindrical pasta."
+          type: string
+          description: A brief description of the food
+          example: "Spaghetti is a long, thin, solid, cylindrical pasta."
         average_rating:
-            type: number
-            description: The average rating of the food
-            example: 4.5
+          type: number
+          description: The average rating of the food
+          example: 4.5
         calories:
-            type: number
-            description: The number of calories in the food
-            example: 300
+          type: number
+          description: The number of calories in the food
+          example: 300
         sugar:
-            type: number
-            description: The amount of sugar in the food
-            example: 10
+          type: number
+          description: The amount of sugar in the food
+          example: 10
         protein:
-            type: number
-            description: The amount of protein in the food
-            example: 20
+          type: number
+          description: The amount of protein in the food
+          example: 20
         sodium:
-            type: number
-            description: The amount of sodium in the food
-            example: 500
+          type: number
+          description: The amount of sodium in the food
+          example: 500
         saturated_fat:
-            type: number
-            description: The amount of fat in the food
-            example: 5
+          type: number
+          description: The amount of fat in the food
+          example: 5
         carbohydrates:
-            type: number
-            description: The amount of fat in the food
-            example: 21.1
+          type: number
+          description: The amount of fat in the food
+          example: 21.1
     Comment:
       type: object
       properties:
@@ -87,198 +91,132 @@ components:
           description: The date and time the comment is made
           example: 2021-01-01T13:17:21Z
     Rating:
-        type: object
-        properties:
-            rating_id:
-              type: integer
-              description: The unique identifier for the rating
-              example: 5
-            user_id:
-              type: integer
-              description: The user ID
-              example: 3
-            food_id:
-              type: integer
-              description: The food ID
-              example: 8
-            rating:
-              type: number
-              description: The rating
-              example: 4
-            created_at:
-              type: string
-              format: date-time
-              description: The date and time the rating is made
-              example: 2021-01-01T13:17:21Z
+      type: object
+      properties:
+        rating_id:
+          type: integer
+          description: The unique identifier for the rating
+          example: 5
+        user_id:
+          type: integer
+          description: The user ID
+          example: 3
+        food_id:
+          type: integer
+          description: The food ID
+          example: 8
+        rating:
+          type: number
+          description: The rating
+          example: 4
+        created_at:
+          type: string
+          format: date-time
+          description: The date and time the rating is made
+          example: 2021-01-01T13:17:21Z
 
 paths:
-#  The API fetches a personalized list of recommended dishes for a user to try out
-    /recommendations/{userId}:
-      get:
-        tags:
-          - recommendations
-        summary: Get recommendations
-        description: Get a list of recommended dishes for a user
-        parameters:
-            - name: userId
-              in: path
-              required: true
-              description: The user ID
-              schema:
-                type: string
-                example: 12
-        responses:
-          '200': # status code
-            description: A JSON array of user names
-            content:
-              application/json:
-                schema:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Food'
-    /foods:
-      get:
-        tags:
-          - food
-        summary: Search for foods
-        description: Get a list of foods that match the search query
-        parameters:
-            - name: query
-              in: query
-              required: true
-              description: The search query
-              schema:
-                type: string
-              example: italian
-            - name: search_type
-              in: query
-              required: true
-              description: The type of search
-              schema:
-                  type: string
-                  enum: [keyword, category]
-              example: category
-            - name: limit
-              in: query
-              required: false
-              description: The maximum number of foods to return
-              schema:
-                type: integer
-                minimum: 10
-                maximum: 20
-              example: 10
-            - name: offset
-              in: query
-              required: false
-              description: The number of foods to skip
-              schema:
-                type: integer
-                minimum: 0
-              example: 0
-        responses:
-          '200': # status code
-            description: A JSON array of foods
-            content:
-              application/json:
-                schema:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Food'
-    /foods/{foodId}:
+  #  The API fetches a personalized list of recommended dishes for a user to try out
+  /recommendations/{userId}:
+    get:
+      tags:
+        - recommendations
+      summary: Get recommendations
+      description: Get a list of recommended dishes for a user
       parameters:
-        - name: foodId
+        - name: userId
           in: path
           required: true
-          description: The food ID
+          description: The user ID
           schema:
-            type: integer
-          example: 44394
-      post:
-        description: Admins can add a new food
-        requestBody:
+            type: string
+            example: 12
+      responses:
+        "200": # status code
+          description: A JSON array of user names
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Food'
-        responses:
-          201:
-            description: Food added
-            content:
-              application/json:
-                schema:
-                  type: string
-                  example: Food added
-      get:
-        tags:
-          - food
-        summary: Get a food by ID
-        description: Fetch a food by its unique identifier
-        parameters:
-          - name: foodId
-            in: path
-            required: true
-            description: The food ID
-            schema:
-              type: integer
-            example: 44394
-        responses:
-          '200': # status code
-            description: A JSON object of the food
-            content:
-              application/json:
-                schema:
-                  allOf:
-                    - $ref: '#/components/schemas/Food'
-                    - type: object
-                      properties:
-                        user_rating:
-                          type: integer
-                          description: The user's own rating for the food
-                          example: 2
-                        ratings:
-                          type: array
-                          items:
-                            $ref: "#/components/schemas/Rating"
-                        comments:
-                          type: array
-                          items:
-                            $ref: "#/components/schemas/Comment"
-      put:
-        description: Admin updates information of a food
-        requestBody:
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Food'
-        responses:
-          202:
-            description: Update successful
-            content:
-              application/json:
-                schema:
+                type: array
+                items:
                   $ref: "#/components/schemas/Food"
-      delete:
-        description: The admin removes a food
-        responses:
-          204:
-            description: The removal was successful
-
-    /my/foods:
-      get:
-        tags:
-          - favorite
-        summary: Get user favorite foods
-        description: Get a list of the user's favorite foods
-        responses:
-          '200': # status code
-            description: A JSON array of foods
-            content:
-              application/json:
-                schema:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Food'
-    /my/foods/{foodId}:
+  /foods:
+    get:
+      tags:
+        - food
+      summary: Search for foods
+      description: Get a list of foods that match the search query
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: The search query
+          schema:
+            type: string
+          example: italian
+        - name: search_type
+          in: query
+          required: true
+          description: The type of search
+          schema:
+            type: string
+            enum: [keyword, category]
+          example: category
+        - name: limit
+          in: query
+          required: false
+          description: The maximum number of foods to return
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 20
+          example: 10
+        - name: offset
+          in: query
+          required: false
+          description: The number of foods to skip
+          schema:
+            type: integer
+            minimum: 0
+          example: 0
+      responses:
+        "200": # status code
+          description: A JSON array of foods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Food"
+  /foods/{foodId}:
+    parameters:
+      - name: foodId
+        in: path
+        required: true
+        description: The food ID
+        schema:
+          type: integer
+        example: 44394
+    post:
+      description: Admins can add a new food
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Food"
+      responses:
+        201:
+          description: Food added
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Food added
+    get:
+      tags:
+        - food
+      summary: Get a food by ID
+      description: Fetch a food by its unique identifier
       parameters:
         - name: foodId
           in: path
@@ -287,143 +225,209 @@ paths:
           schema:
             type: integer
           example: 44394
-      post:
-        tags:
-          - favorite
-        summary: Add a favorite food
-        description: Add a food to the user's list of favorite foods
-        requestBody:
-          required: true
+      responses:
+        "200": # status code
+          description: A JSON object of the food
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  food_id:
-                    type: integer
-                    description: The food ID
-                    example: 8
-                    required: ["true"]
-        responses:
-          '201': # status code
-            description: The food added successfully
-      delete:
-        tags:
-          - favorite
-        summary: Delete a favorite food
-        description: Delete a food from the user's list of favorite foods
-        responses:
-            204: # status code
-                description: The food was deleted successfully
+                allOf:
+                  - $ref: "#/components/schemas/Food"
+                  - type: object
+                    properties:
+                      user_rating:
+                        type: integer
+                        description: The user's own rating for the food
+                        example: 2
+                      ratings:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Rating"
+                      comments:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Comment"
+    put:
+      description: Admin updates information of a food
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Food"
+      responses:
+        202:
+          description: Update successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Food"
+    delete:
+      description: The admin removes a food
+      responses:
+        204:
+          description: The removal was successful
 
-    /foods/{foodId}/comments:
-      parameters:
-        - in: path
-          name: foodId
-          required: true
-          example: 44394
-      post:
-        tags:
-          - user
-        summary: Add a comment
-        description: Add a comment to a food
-        requestBody:
-          required: true
+  /my/foods:
+    get:
+      tags:
+        - favorite
+      summary: Get user favorite foods
+      description: Get a list of the user's favorite foods
+      responses:
+        "200": # status code
+          description: A JSON array of foods
           content:
             application/json:
               schema:
-                type: object
-                required: [user_id, food_id, comment]
-                properties:
-                  parent_comment_id:
-                    type: integer
-                    description: The user ID
-                    nullable: true
-                    example: null
-                  user_id:
-                    type: integer
-                    description: The user ID
-                    example: 5
-                  food_id:
-                    type: integer
-                    description: The food ID
-                    example: 8
-                  comment:
-                    type: string
-                    description: The comment
-                    example: "Out of this world!"
-        responses:
-          '201': # status code
-            description: The comment was added successfully
-    /foods/{foodId}/comments/{commentId}:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Food"
+  /my/foods/{foodId}:
+    parameters:
+      - name: foodId
+        in: path
+        required: true
+        description: The food ID
+        schema:
+          type: integer
+        example: 44394
+    post:
+      tags:
+        - favorite
+      summary: Add a favorite food
+      description: Add a food to the user's list of favorite foods
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                food_id:
+                  type: integer
+                  description: The food ID
+                  example: 8
+                  required: ["true"]
+      responses:
+        "201": # status code
+          description: The food added successfully
+    delete:
+      tags:
+        - favorite
+      summary: Delete a favorite food
+      description: Delete a food from the user's list of favorite foods
+      responses:
+        204: # status code
+          description: The food was deleted successfully
+
+  /foods/{foodId}/comments:
+    parameters:
+      - in: path
+        name: foodId
+        required: true
+        example: 44394
+    post:
+      tags:
+        - user
+      summary: Add a comment
+      description: Add a comment to a food
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, food_id, comment]
+              properties:
+                parent_comment_id:
+                  type: integer
+                  description: The user ID
+                  nullable: true
+                  example: null
+                user_id:
+                  type: integer
+                  description: The user ID
+                  example: 5
+                food_id:
+                  type: integer
+                  description: The food ID
+                  example: 8
+                comment:
+                  type: string
+                  description: The comment
+                  example: "Out of this world!"
+      responses:
+        "201": # status code
+          description: The comment was added successfully
+  /foods/{foodId}/comments/{commentId}:
+    parameters:
+      - in: path
+        name: foodId
+        required: true
+        example: 44394
+      - in: path
+        name: commentId
+        required: true
+        example: 2
+    delete:
+      tags:
+        - user
+      summary: Delete a comment
+      description: Delete a comment from a food
+      responses:
+        204: # status code
+          description: The comment was deleted successfully
+  /foods/{foodId}/ratings:
+    post:
+      tags:
+        - user
+      summary: Add a rating
+      description: Add a rating to a food
       parameters:
         - in: path
           name: foodId
           required: true
-          example: 44394
-        - in: path
-          name: commentId
-          required: true
           example: 2
-      delete:
-        tags:
-          - user
-        summary: Delete a comment
-        description: Delete a comment from a food
-        responses:
-          204: # status code
-            description: The comment was deleted successfully
-    /foods/{foodId}/ratings:
-      post:
-        tags:
-          - user
-        summary: Add a rating
-        description: Add a rating to a food
-        parameters:
-          - in: path
-            name: foodId
-            required: true
-            example: 2
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user_id:
-                    type: integer
-                    description: The user ID
-                    example: 5
-                    required: ["true"]
-                  food_id:
-                    type: integer
-                    description: The food ID
-                    example: 8
-                    required: ["true"]
-                  rating:
-                    type: integer
-                    description: The rating
-                    example: 4
-                    required: ["true"]
-        responses:
-          201: # status code
-            description: The rating was added successfully
-    /foods/{foodId}/ratings/{ratingId}:
-      parameters:
-        - in: path
-          name: foodId
-          required: true
-          example: 44394
-        - in: path
-          name: commentId
-          required: true
-          example: 2
-      put:
-          tags:
-          - user
-          summary: Update a rating
-          description: Update a rating for a food
-          responses:
-            200: # status code
-                description: The rating was updated successfully
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: The user ID
+                  example: 5
+                  required: ["true"]
+                food_id:
+                  type: integer
+                  description: The food ID
+                  example: 8
+                  required: ["true"]
+                rating:
+                  type: integer
+                  description: The rating
+                  example: 4
+                  required: ["true"]
+      responses:
+        201: # status code
+          description: The rating was added successfully
+  /foods/{foodId}/ratings/{ratingId}:
+    parameters:
+      - in: path
+        name: foodId
+        required: true
+        example: 44394
+      - in: path
+        name: commentId
+        required: true
+        example: 2
+    put:
+      tags:
+        - user
+      summary: Update a rating
+      description: Update a rating for a food
+      responses:
+        200: # status code
+          description: The rating was updated successfully
