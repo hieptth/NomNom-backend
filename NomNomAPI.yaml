@@ -14,6 +14,7 @@ components:
         food_id:
           type: integer
           description: The unique identifier for the food
+          readOnly: true
           example: 5
         name:
           type: string
@@ -184,19 +185,42 @@ paths:
                     items:
                         $ref: '#/components/schemas/Food'
     /foods/{foodId}:
+      parameters:
+        - name: foodId
+          in: path
+          required: true
+          description: The food ID
+          schema:
+            type: integer
+          example: 44394
+      post:
+        description: Admins can add a new food
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Food'
+        responses:
+          201:
+            description: Food added
+            content:
+              application/json:
+                schema:
+                  type: string
+                  example: Food added
       get:
         tags:
           - food
         summary: Get a food by ID
         description: Fetch a food by its unique identifier
         parameters:
-            - name: foodId
-              in: path
-              required: true
-              description: The food ID
-              schema:
-                type: integer
-              example: 44394
+          - name: foodId
+            in: path
+            required: true
+            description: The food ID
+            schema:
+              type: integer
+            example: 44394
         responses:
           '200': # status code
             description: A JSON object of the food
@@ -219,7 +243,50 @@ paths:
                           type: array
                           items:
                             $ref: "#/components/schemas/Comment"
+      put:
+        description: Admin updates information of a food
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Food'
+        responses:
+          202:
+            description: Update successful
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Food"
+      delete:
+        description: The admin removes a food
+        responses:
+          204:
+            description: The removal was successful
+
     /my/foods:
+      get:
+        tags:
+          - favorite
+        summary: Get user favorite foods
+        description: Get a list of the user's favorite foods
+        responses:
+          '200': # status code
+            description: A JSON array of foods
+            content:
+              application/json:
+                schema:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Food'
+    /my/foods/{foodId}:
+      parameters:
+        - name: foodId
+          in: path
+          required: true
+          description: The food ID
+          schema:
+            type: integer
+          example: 44394
       post:
         tags:
           - favorite
@@ -239,49 +306,27 @@ paths:
                     required: ["true"]
         responses:
           '201': # status code
-            description: The food was added successfully
-      get:
-        tags:
-          - favorite
-        summary: Get user favorite foods
-        description: Get a list of the user's favorite foods
-        responses:
-          '200': # status code
-            description: A JSON array of foods
-            content:
-              application/json:
-                schema:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Food'
-    /my/foods/{foodId}:
+            description: The food added successfully
       delete:
         tags:
           - favorite
         summary: Delete a favorite food
-        parameters:
-          - name: foodId
-            in: path
-            required: true
-            description: The food ID
-            schema:
-              type: integer
-            example: 8
         description: Delete a food from the user's list of favorite foods
         responses:
-            '204': # status code
+            204: # status code
                 description: The food was deleted successfully
+
     /foods/{foodId}/comments:
+      parameters:
+        - in: path
+          name: foodId
+          required: true
+          example: 44394
       post:
         tags:
           - user
         summary: Add a comment
         description: Add a comment to a food
-        parameters:
-          - in: path
-            name: foodId
-            required: true
-            example: 2
         requestBody:
           required: true
           content:
@@ -310,6 +355,24 @@ paths:
         responses:
           '201': # status code
             description: The comment was added successfully
+    /foods/{foodId}/comments/{commentId}:
+      parameters:
+        - in: path
+          name: foodId
+          required: true
+          example: 44394
+        - in: path
+          name: commentId
+          required: true
+          example: 2
+      delete:
+        tags:
+          - user
+        summary: Delete a comment
+        description: Delete a comment from a food
+        responses:
+          204: # status code
+            description: The comment was deleted successfully
     /foods/{foodId}/ratings:
       post:
         tags:
@@ -344,5 +407,23 @@ paths:
                     example: 4
                     required: ["true"]
         responses:
-          '201': # status code
+          201: # status code
             description: The rating was added successfully
+    /foods/{foodId}/ratings/{ratingId}:
+      parameters:
+        - in: path
+          name: foodId
+          required: true
+          example: 44394
+        - in: path
+          name: commentId
+          required: true
+          example: 2
+      put:
+          tags:
+          - user
+          summary: Update a rating
+          description: Update a rating for a food
+          responses:
+            200: # status code
+                description: The rating was updated successfully

@@ -3,15 +3,15 @@ import json
 from supabase import create_client, Client
 from itertools import groupby
 import os
-
 import pickle
 
 from flask import Flask, request
+from model.model import SearchModel
 
 app = Flask(__name__)
 try:
-    SUPABASE_PROJECT_URL: str = os.getenv("SUPABASE_PROJECT_URL")
-    SUPABASE_API_KEY: str = os.getenv("SUPABASE_API_KEY")
+    SUPABASE_PROJECT_URL: str = "https://owqlwkvugpenhbianqia.supabase.co"
+    SUPABASE_API_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cWx3a3Z1Z3BlbmhiaWFucWlhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMDMzODkyMSwiZXhwIjoyMDI1OTE0OTIxfQ.Kpgtiz0Qmqrnjo17Ck-P7wVjSzjiPdXSN22WYoFDPjU"
 except None:
     SUPABASE_PROJECT_URL: str = "default"
     SUPABASE_API_KEY: str = "default"
@@ -24,11 +24,15 @@ supabase: Client = create_client(
 
 @app.route('/')
 def hello_world():  # put application's code here
-    return 'Hello bruuuuuu'
+    return 'nom nom nom'
 
-from model.model import SearchModel
-with open('/recommendation/model/model0604.pkl', 'rb') as f:
-    model: SearchModel = pickle.load(f)
+# Deprecated buts keep for reference to create custom unpickler
+# class CustomUnpickler(pickle.Unpickler):
+#     def find_class(self, module, name):
+#         if name == "SearchModel":
+#             return SearchModel
+#         return super().find_class(module, name)
+
 
 @app.route('/recommendations/<user_id>', methods=["GET"])
 def get_recommendations(user_id:int):
@@ -45,17 +49,6 @@ def get_recommendations(user_id:int):
         tag_list = list(tags)
         food['tags'] = list(map(lambda x: x['tag']['content'], tag_list))
         food_history.append(food)
-    for food in food_history:
-        similar_foods = model.search(
-            name=food["name"],
-            tags=", ".join(food["tags"]),
-            nutrition=[600, 80, 10, 50, 150, 30, 50],
-            # NUTRITIONS = ['calories', 'fat', 'sugar', 'sodium', 'protein', 'saturated_fat', 'carbohydrates']
-        )[:10]  # Take 10 most similar (can take up to k)
-        names = [similar_food[0]['name'] for similar_food in similar_foods]
-        ids = [similar_food[0]['id'] for similar_food in similar_foods]
-        print(names)
-        print(ids)
     return json.dumps(food_history)
 
 @app.route('/foods/<food_id>', methods=["GET"])
