@@ -397,3 +397,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /.idea
+
+# Virtual Environment and .env
+.env
+venv
+
