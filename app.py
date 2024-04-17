@@ -42,15 +42,18 @@ def get_recommendations(user_id:int):
     # food id -> tags
     # response_data: List of food json objects
     food_ids = [food_object['food']['food_id'] for food_object in response_data]
+    # Fetch tags for each food_id and aggregate them
     (_, response_data), _ = supabase.table('food_tag').select('food(*), tag(*)').in_('food_id', food_ids).execute()
-    # TODO: Implement a way to get the tags from the food_id
-    grouped_by_response = groupby(response_data, lambda x: x['food'])
-    food_history = []
-    for food, tags in grouped_by_response:
-        tag_list = list(tags)
-        food['tags'] = list(map(lambda x: x['tag']['content'], tag_list))
-        food_history.append(food)
-    return json.dumps(food_history)
+    # Aggregate tags for each food_id
+    food_history = {}
+    for item in response_data:
+        food_id = item['food']['food_id']
+        tag_content = item['tag']['content']
+        if food_id not in food_history:
+            food_history[food_id] = item['food']
+            food_history[food_id]['tags'] = []
+        food_history[food_id]['tags'].append(tag_content)
+    return json.dumps(list(food_history.values()))
 
 
 @app.route('/foods', methods=['GET'])
@@ -68,7 +71,7 @@ def search_foods():
 @app.route('/foods/<int:food_id>', methods=['GET'])
 def get_food(food_id):
     # Fetch the food details
-    food_result = supabase.table("foods").select("*").eq("food_id", food_id).execute()
+    food_result = supabase.table("food").select("*").eq("food_id", food_id).execute()
 
     if not food_result.data:
         return jsonify({"error": "Food not found"}), 404
@@ -152,4 +155,3 @@ def add_rating():
 
 if __name__ == '__main__':
     app.run(debug=True ,host='0.0.0.0', port=5001)
-
