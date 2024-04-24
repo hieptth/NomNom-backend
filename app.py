@@ -5,6 +5,7 @@ import os
 
 from itertools import groupby
 from dotenv import load_dotenv
+from auth import auth
 
 load_dotenv()
 
@@ -22,6 +23,9 @@ supabase: Client = create_client(
     SUPABASE_API_KEY,
 )
 
+# Setup app context & register blueprint
+app.config['SUPABASE_CLIENT'] = supabase
+app.register_blueprint(auth)
 
 @app.route('/')
 def hello_world():  # put application's code here

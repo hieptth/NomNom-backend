@@ -1,9 +1,10 @@
 import os
-from flask import Blueprint, request, jsonify, redirect
-from app.supabase import supabase
+from flask import app, current_app, Blueprint, request, jsonify, redirect
 from gotrue.errors import AuthApiError
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
+with app.app_context():
+    supabase = current_app.config['SUPABASE_CLIENT']
 
 @auth.route("/signin", methods=["POST"])
 def signin():
