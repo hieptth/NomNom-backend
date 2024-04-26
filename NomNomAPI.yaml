@@ -179,6 +179,13 @@ paths:
             type: integer
             minimum: 0
           example: 0
+        - name: saveHistory
+          in: query
+          required: false
+          description: Save the search history
+          schema:
+              type: boolean
+          example: true
       responses:
         "200": # status code
           description: A JSON array of foods
