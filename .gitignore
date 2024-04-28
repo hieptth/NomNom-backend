@@ -397,5 +397,10 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /.idea
+
+# .env file
 .env
-.env
+
+# venv folder
+venv
+
