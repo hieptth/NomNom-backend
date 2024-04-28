@@ -1,8 +1,8 @@
-openapi: "3.0.0"
+openapi: 3.0.0
 info:
   title: NomNom API Documentation
   description: NomNom API Documentation
-  version: 0.1.9
+  version: 0.0.2
 servers:
   - url: http://localhost:5000
     description: Development server
@@ -179,6 +179,13 @@ paths:
             type: integer
             minimum: 0
           example: 0
+        - name: saveHistory
+          in: query
+          required: false
+          description: Save the search history
+          schema:
+            type: boolean
+          example: true
       responses:
         "200": # status code
           description: A JSON array of foods
@@ -324,6 +331,9 @@ paths:
     parameters:
       - in: path
         name: foodId
+        schema:
+          type: string
+          example: 43212
         required: true
         example: 44394
     post:
@@ -363,10 +373,16 @@ paths:
     parameters:
       - in: path
         name: foodId
+        schema:
+          type: string
+          example: 43212
         required: true
         example: 44394
       - in: path
         name: commentId
+        schema:
+          type: string
+          example: 43212
         required: true
         example: 2
     delete:
@@ -386,6 +402,9 @@ paths:
       parameters:
         - in: path
           name: foodId
+          schema:
+            type: string
+            example: 43212
           required: true
           example: 2
       requestBody:
@@ -420,7 +439,7 @@ paths:
         required: true
         example: 44394
       - in: path
-        name: commentId
+        name: ratingId
         required: true
         example: 2
     put:
