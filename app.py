@@ -8,6 +8,7 @@ from gotrue.errors import AuthApiError
 import os
 from datetime import datetime
 from postgrest.exceptions import APIError
+import requests
 
 from itertools import groupby
 from dotenv import load_dotenv
@@ -58,17 +59,17 @@ def login():
     password = request.json['password']
     try:
         response = supabase.auth.sign_in_with_password(credentials={"email": email, "password": password})
-        
+
         if not response.user:
             return jsonify({"error": "Login failed"}), 401
         else:
             return jsonify({
-                'user': response.user.email, 
-                'session': response.session.access_token  
+                'user': response.user.email,
+                'session': response.session.access_token
             }), 200
     except Exception as message:
         return jsonify({"error": str(message)}), 500
-    
+
 @app.route('/iam/signup', methods=['POST'])
 def register():
     email = request.json['email']
@@ -106,8 +107,8 @@ def logout():
     except Exception as e:
         app.logger.error(f"Exception during logout: {str(e)}")
         return jsonify({"error": str(e)}), 500
-    
-    
+
+
 @app.route('/')
 def hello_world():  # put application's code here
     return 'nom nom nom'
@@ -119,25 +120,39 @@ def hello_world():  # put application's code here
 #             return SearchModel
 #         return super().find_class(module, name)
 
-   
-# @app.route('/recommendations/<user_id>', methods=["GET"])
-# @token_required
-# def get_recommendations(user_id:int):
-#     # Fetch all user's search history
-#     (_, response_data), _ = supabase.table('user_searches_food').select('food(food_id)').eq('user_id', user_id).execute()
-#     # food id -> tags
-#     # response_data: List of food json objects
-#     food_ids = [food_object['food']['food_id'] for food_object in response_data]
-#     (_, response_data), _ = supabase.table('food_tag').select('food(*), tag(*)').in_('food_id', food_ids).execute()
-#     # TODO: Implement a way to get the tags from the food_id
-#     grouped_by_response = groupby(response_data, lambda x: x['food'])
-#     food_history = []
-#     for food, tags in grouped_by_response:
-#         tag_list = list(tags)
-#         food['tags'] = list(map(lambda x: x['tag']['content'], tag_list))
-#         food_history.append(food)
-#     return json.dumps(food_history)
 
+@app.route('/recommendations/<user_id>', methods=["GET"])
+def get_recommendations(user_id:int):
+    # Fetch all user's search history
+    (_, response_data), _ = supabase.table('user_searches_food').select('food(food_id)').eq('user_id', user_id).execute()
+    # food id -> tags
+    # response_data: List of food json objects
+    food_ids = [food_object['food']['food_id'] for food_object in response_data]
+    (_, response_data), _ = supabase.table('food_tag').select('food(*), tag(*)').in_('food_id', food_ids).execute()
+    # TODO: Implement a way to get the tags from the food_id
+    grouped_by_response = groupby(response_data, lambda x: x['food'])
+    food_history = []
+    for food, tags in grouped_by_response:
+        tag_list = list(tags)
+        food['tags'] = list(map(lambda x: x['tag']['content'], tag_list))
+        food_history.append(food)
+    # Get recommendations from the recommendation engine
+    resp = requests.post(
+        #TODO: Follow these steps to get the ngrok link to the recommendation engine
+        # Step 1: Access the Colab environment: https://colab.research.google.com/drive/1Ez60gkN1aIp2eNZh9aHMul9kZEtTyGKU?fbclid=IwAR2xqWVkDtC1gRZkYnOsQEIoGTZtcVovhcdcb7vPdJjVLja6vQdLmnjQTUk&authuser=1#scrollTo=SCgfvhLVipAQ
+        # Step 2: In the menu bar, click "Runtime" -> "Run all". Wait until it stops at the "assert False" cell.
+        # Step 3: Find the "Deploy the NomNom" cell, run it and its subsequent cells.
+        # Step 4: Scrolling down, you should be seeing the ngrok link to the recommendation engine
+        # Step 5: Copy the link and paste it here
+        "https://ab22-34-73-82-0.ngrok-free.app/recommend",
+        json={"food_history": food_history}
+    )
+    food_indices = list(resp.json())
+    print(food_indices)
+    # Get the food objects from the indices
+    recommendation_resp = supabase.table('food').select('*').in_('food_id', food_indices).execute()
+
+    return jsonify(recommendation_resp.data)
 # # GET /foods?query=chicken&search_type=name&limit=10&offset=0
 # @app.route('/foods', methods=['GET'])
 # @token_required
@@ -177,7 +192,7 @@ def get_food(food_id: int):
 @app.route('/my/foods', methods=['POST'])
 # @token_required
 def add_favorite_food():
-    
+
     try:
         user_id = request.json.get('user_id')
         food_id = request.json.get('food_id')
@@ -185,7 +200,7 @@ def add_favorite_food():
         user_check = supabase.table('user').select('user_id').eq('user_id', user_id).execute()
         if user_check.data is None or len(user_check.data) == 0:
             return jsonify({"error": "User not found"}), 404
-        
+
         # Check if the food_id exists
         food_check = supabase.table('food').select('food_id').eq('food_id', food_id).execute()
         if food_check.data is None or len(food_check.data) == 0:
@@ -202,12 +217,12 @@ def add_favorite_food():
 
         # Insert data into 'user_likes_food' table
         result = supabase.table('user_likes_food').insert({
-            "user_id": user_id, 
-            "food_id": food_id, 
+            "user_id": user_id,
+            "food_id": food_id,
             "created_at": created_at
         }).execute()
 
-    
+
 
         return jsonify({"message": "Food added to favorites"}), 201
     except APIError as e:
@@ -226,10 +241,9 @@ def get_favorite_foods(user_id: int):
     except APIError as e:
         error_message = e.args[0] if e.args else "Unknown database error"
         return jsonify({'error': error_message}), 500
-  
 
-@app.route('/my/foods/<int:user_id>/<int:food_id>', methods=['DELETE']) 
-# @token_required
+
+@app.route('/my/foods/<int:user_id>/<int:food_id>', methods=['DELETE'])# @token_required
 def delete_favorite_food(user_id, food_id):
     try:
         # Targeting the specific record with both user_id and food_id
@@ -288,9 +302,9 @@ def delete_comment(user_id: int,food_id: int, comment_id: int):
         find = supabase.table('user_commentson_food').select('*').match({"user_id": user_id, "food_id": food_id, "comment_id": comment_id}).execute()
         if not find.data:
             return jsonify({"error": "Comment not found"}), 404
-        
+
         result = supabase.table('user_commentson_food').delete().match({ "user_id": user_id,"food_id": food_id, "comment_id": comment_id}).execute()
-   
+
         return jsonify({"message": "Comment deleted successfully"}), 204
     except APIError as e:
         error_message = e.args[0] if e.args else "Unknown database error"
@@ -311,7 +325,7 @@ def update_comment(user_id: int, food_id: int, comment_id: int):
     except APIError as e:
         error_message = e.args[0] if e.args else "Unknown database error"
         return jsonify({'error': error_message}), 500
-    
+
 ####################RATING SECTION####################
 
 # POST /foods/ratings/<food_id>
@@ -329,7 +343,7 @@ def add_rating(food_id: int):
             "rating": rating
         }).execute()
 
- 
+
         return jsonify({"message": "Rating added successfully"}), 201
     except APIError as e:
         error_message = e.args[0] if e.args else "Unknown database error"
