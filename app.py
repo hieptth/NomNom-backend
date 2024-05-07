@@ -2,6 +2,7 @@ import json
 from flask import Flask, request, jsonify
 from supabase import create_client, Client
 import os
+import requests
 
 from itertools import groupby
 from dotenv import load_dotenv
@@ -49,7 +50,23 @@ def get_recommendations(user_id:int):
         tag_list = list(tags)
         food['tags'] = list(map(lambda x: x['tag']['content'], tag_list))
         food_history.append(food)
-    return json.dumps(food_history)
+    # Get recommendations from the recommendation engine
+    resp = requests.post(
+        #TODO: Follow these steps to get the ngrok link to the recommendation engine
+        # Step 1: Access the Colab environment: https://colab.research.google.com/drive/1Ez60gkN1aIp2eNZh9aHMul9kZEtTyGKU?fbclid=IwAR2xqWVkDtC1gRZkYnOsQEIoGTZtcVovhcdcb7vPdJjVLja6vQdLmnjQTUk&authuser=1#scrollTo=SCgfvhLVipAQ
+        # Step 2: In the menu bar, click "Runtime" -> "Run all". Wait until it stops at the "assert False" cell.
+        # Step 3: Find the "Deploy the NomNom" cell, run it and its subsequent cells.
+        # Step 4: Scrolling down, you should be seeing the ngrok link to the recommendation engine
+        # Step 5: Copy the link and paste it here
+        "https://ab22-34-73-82-0.ngrok-free.app/recommend",
+        json={"food_history": food_history}
+    )
+    food_indices = list(resp.json())
+    print(food_indices)
+    # Get the food objects from the indices
+    recommendation_resp = supabase.table('food').select('*').in_('food_id', food_indices).execute()
+
+    return jsonify(recommendation_resp.data)
 
 
 @app.route('/foods', methods=['GET'])
