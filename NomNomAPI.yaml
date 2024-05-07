@@ -4,7 +4,7 @@ info:
   description: NomNom API Documentation
   version: 0.0.2
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:8080
     description: Development server
 components:
   schemas:
@@ -14,7 +14,6 @@ components:
         food_id:
           type: integer
           description: The unique identifier for the food
-          readOnly: true
           example: 5
         name:
           type: string
@@ -30,7 +29,19 @@ components:
               "https://www.example.com/spaghetti.jpg",
               "https://www.example.com/spaghetti2.jpg",
             ]
+          example:
+            [
+              "https://www.example.com/spaghetti.jpg",
+              "https://www.example.com/spaghetti2.jpg",
+            ]
         description:
+          type: string
+          description: A brief description of the food
+          example: "Spaghetti is a long, thin, solid, cylindrical pasta."
+        average_rating:
+          type: number
+          description: The average rating of the food
+          example: 4.5
           type: string
           description: A brief description of the food
           example: "Spaghetti is a long, thin, solid, cylindrical pasta."
@@ -42,7 +53,13 @@ components:
           type: number
           description: The number of calories in the food
           example: 300
+          type: number
+          description: The number of calories in the food
+          example: 300
         sugar:
+          type: number
+          description: The amount of sugar in the food
+          example: 10
           type: number
           description: The amount of sugar in the food
           example: 10
@@ -50,11 +67,24 @@ components:
           type: number
           description: The amount of protein in the food
           example: 20
+          type: number
+          description: The amount of protein in the food
+          example: 20
         sodium:
           type: number
           description: The amount of sodium in the food
           example: 500
+          type: number
+          description: The amount of sodium in the food
+          example: 500
         saturated_fat:
+          type: number
+          description: The amount of fat in the food
+          example: 5
+        carbohydrates:
+          type: number
+          description: The amount of fat in the food
+          example: 21.1
           type: number
           description: The amount of fat in the food
           example: 5
@@ -81,16 +111,44 @@ components:
           type: integer
           description: The parent's comment ID
           example: 2
+        parent_comment_id:
+          type: integer
+          description: The parent's comment ID
+          example: 2
         comment:
           type: string
           description: The comment
           example: "Out of this world!"
+        created_at:
         created_at:
           type: string
           format: date-time
           description: The date and time the comment is made
           example: 2021-01-01T13:17:21Z
     Rating:
+      type: object
+      properties:
+        rating_id:
+          type: integer
+          description: The unique identifier for the rating
+          example: 5
+        user_id:
+          type: integer
+          description: The user ID
+          example: 3
+        food_id:
+          type: integer
+          description: The food ID
+          example: 8
+        rating:
+          type: number
+          description: The rating
+          example: 4
+        created_at:
+          type: string
+          format: date-time
+          description: The date and time the rating is made
+          example: 2021-01-01T13:17:21Z
       type: object
       properties:
         rating_id:
@@ -179,13 +237,6 @@ paths:
             type: integer
             minimum: 0
           example: 0
-        - name: saveHistory
-          in: query
-          required: false
-          description: Save the search history
-          schema:
-              type: boolean
-          example: true
       responses:
         "200": # status code
           description: A JSON array of foods
@@ -196,29 +247,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/Food"
   /foods/{foodId}:
-    parameters:
-      - name: foodId
-        in: path
-        required: true
-        description: The food ID
-        schema:
-          type: integer
-        example: 44394
-    post:
-      description: Admins can add a new food
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Food"
-      responses:
-        201:
-          description: Food added
-          content:
-            application/json:
-              schema:
-                type: string
-                example: Food added
     get:
       tags:
         - food
@@ -231,7 +259,7 @@ paths:
           description: The food ID
           schema:
             type: integer
-          example: 44394
+          example: 8
       responses:
         "200": # status code
           description: A JSON object of the food
@@ -254,50 +282,7 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/Comment"
-    put:
-      description: Admin updates information of a food
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Food"
-      responses:
-        202:
-          description: Update successful
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Food"
-    delete:
-      description: The admin removes a food
-      responses:
-        204:
-          description: The removal was successful
-
   /my/foods:
-    get:
-      tags:
-        - favorite
-      summary: Get user favorite foods
-      description: Get a list of the user's favorite foods
-      responses:
-        "200": # status code
-          description: A JSON array of foods
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Food"
-  /my/foods/{foodId}:
-    parameters:
-      - name: foodId
-        in: path
-        required: true
-        description: The food ID
-        schema:
-          type: integer
-        example: 44394
     post:
       tags:
         - favorite
@@ -317,30 +302,49 @@ paths:
                   required: ["true"]
       responses:
         "201": # status code
-          description: The food added successfully
+          description: The food was added successfully
+    get:
+      tags:
+        - favorite
+      summary: Get user favorite foods
+      description: Get a list of the user's favorite foods
+      responses:
+        "200": # status code
+          description: A JSON array of foods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Food"
+  /my/foods/{foodId}:
     delete:
       tags:
         - favorite
       summary: Delete a favorite food
+      parameters:
+        - name: foodId
+          in: path
+          required: true
+          description: The food ID
+          schema:
+            type: integer
+          example: 8
       description: Delete a food from the user's list of favorite foods
       responses:
-        204: # status code
+        "204": # status code
           description: The food was deleted successfully
-
   /foods/{foodId}/comments:
-    parameters:
-      - in: path
-        name: foodId
-        schema:
-          type: string
-          example: 43212
-        required: true
-        example: 44394
     post:
       tags:
         - user
       summary: Add a comment
       description: Add a comment to a food
+      parameters:
+        - in: path
+          name: foodId
+          required: true
+          example: 2
       requestBody:
         required: true
         content:
@@ -369,30 +373,6 @@ paths:
       responses:
         "201": # status code
           description: The comment was added successfully
-  /foods/{foodId}/comments/{commentId}:
-    parameters:
-      - in: path
-        name: foodId
-        schema:
-          type: string
-          example: 43212
-        required: true
-        example: 44394
-      - in: path
-        name: commentId
-        schema:
-          type: string
-          example: 43212
-        required: true
-        example: 2
-    delete:
-      tags:
-        - user
-      summary: Delete a comment
-      description: Delete a comment from a food
-      responses:
-        204: # status code
-          description: The comment was deleted successfully
   /foods/{foodId}/ratings:
     post:
       tags:
@@ -402,9 +382,6 @@ paths:
       parameters:
         - in: path
           name: foodId
-          schema:
-            type: string
-            example: 43212
           required: true
           example: 2
       requestBody:
@@ -430,23 +407,5 @@ paths:
                   example: 4
                   required: ["true"]
       responses:
-        201: # status code
+        "201": # status code
           description: The rating was added successfully
-  /foods/{foodId}/ratings/{ratingId}:
-    parameters:
-      - in: path
-        name: foodId
-        required: true
-        example: 44394
-      - in: path
-        name: ratingId
-        required: true
-        example: 2
-    put:
-      tags:
-        - user
-      summary: Update a rating
-      description: Update a rating for a food
-      responses:
-        200: # status code
-          description: The rating was updated successfully
