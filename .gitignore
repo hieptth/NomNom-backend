@@ -400,10 +400,8 @@ FodyWeavers.xsd
 <<<<<<< HEAD
 <<<<<<< HEAD
 
-# .env file
+# Virtual Environment and .env
 .env
-
-# venv folder
 venv
 
 =======

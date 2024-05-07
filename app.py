@@ -1,7 +1,10 @@
 import json
+import time
+import jwt
 from flask import Flask, request, jsonify
 from datetime import datetime
 from supabase import create_client, Client
+from gotrue.errors import AuthApiError
 import os
 from datetime import datetime
 from postgrest.exceptions import APIError
@@ -26,6 +29,84 @@ supabase: Client = create_client(
     SUPABASE_PROJECT_URL,
     SUPABASE_API_KEY,
 )
+
+def token_required(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        jwt_secret = os.getenv("JWT_SECRET_KEY")
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 403
+        try:
+            token = token.split(" ")[1]
+            app.logger.debug(f"Token received: {token}")
+            data = jwt.decode(token, jwt_secret, algorithms=["HS256"], options={"verify_aud": False})
+            app.logger.debug(f"Token decoded: {data}")
+            if (data["exp"] < time.time()):
+                raise jwt.ExpiredSignatureError
+            current_user = data['user_id']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired'}), 401
+        except jwt.InvalidTokenError as e:
+            return jsonify({'message': 'Token is invalid: ' + str(e)}), 401
+
+        return f(current_user, *args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
+
+@app.route('/iam/signin', methods=['POST'])
+def login():
+    email = request.json['email']
+    password = request.json['password']
+    try:
+        response = supabase.auth.sign_in_with_password(credentials={"email": email, "password": password})
+
+        if not response.user:
+            return jsonify({"error": "Login failed"}), 401
+        else:
+            return jsonify({
+                'user': response.user.email,
+                'session': response.session.access_token
+            }), 200
+    except Exception as message:
+        return jsonify({"error": str(message)}), 500
+
+@app.route('/iam/signup', methods=['POST'])
+def register():
+    email = request.json['email']
+    password = request.json['password']
+    try:
+        response = supabase.auth.sign_up(credentials={"email": email, "password": password})
+
+        if not response.user:
+            return jsonify({"error": response.error.message}), 400
+        else:
+            return jsonify({
+                'user': response.user.email,
+                'session': response.session.access_token
+            }), 200
+    except Exception as message:
+        return jsonify({"error": str(message)}), 500
+
+@app.route('/iam/signout', methods=['POST'])
+@token_required
+def logout():
+    token = request.headers.get('Authorization').split(" ")[1]
+    try:
+        response = supabase.auth.sign_out(token)
+        app.logger.debug(f"Logout response: {response}")
+
+        if response is None:
+            app.logger.error("Logout failed: No response from Supabase")
+            return jsonify({"error": "Logout failed due to no response from Supabase"}), 500
+
+        if response.error:
+            app.logger.debug(f"Error during logout: {response.error}")
+            return jsonify({"error": response.error.message}), 400
+
+        return jsonify({"message": "Successfully logged out"}), 200
+    except Exception as e:
+        app.logger.error(f"Exception during logout: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/')
@@ -74,6 +155,7 @@ def get_recommendations(user_id:int):
     return jsonify(recommendation_resp.data)
 # # GET /foods?query=chicken&search_type=name&limit=10&offset=0
 # @app.route('/foods', methods=['GET'])
+# @token_required
 # def search_foods():
 #     query = request.args.get('query')
 #     search_type = request.args.get('search_type')
@@ -89,6 +171,7 @@ def get_recommendations(user_id:int):
 # GET food information
 
 @app.route('/foods/<int:food_id>', methods=['GET'])
+# @token_required
 def get_food(food_id: int):
     food_result = supabase.table("food").select("*").eq("food_id", food_id).execute()
     if not food_result.data:
@@ -107,6 +190,7 @@ def get_food(food_id: int):
 
 # POST Favorite food
 @app.route('/my/foods', methods=['POST'])
+# @token_required
 def add_favorite_food():
 
     try:
@@ -148,6 +232,7 @@ def add_favorite_food():
 
 
 @app.route('/my/foods/<int:user_id>', methods=['GET'])
+# @token_required
 def get_favorite_foods(user_id: int):
 
     try:
@@ -158,7 +243,7 @@ def get_favorite_foods(user_id: int):
         return jsonify({'error': error_message}), 500
 
 
-@app.route('/my/foods/<int:user_id>/<int:food_id>', methods=['DELETE'])
+@app.route('/my/foods/<int:user_id>/<int:food_id>', methods=['DELETE'])# @token_required
 def delete_favorite_food(user_id, food_id):
     try:
         # Targeting the specific record with both user_id and food_id
@@ -181,6 +266,7 @@ def delete_favorite_food(user_id, food_id):
 
 # POST /foods/<food_id>/comments
 @app.route('/foods/comments/<int:food_id>', methods=['POST'])
+# @token_required
 def add_comment(food_id: int):
     try:
         user_id = request.json.get('user_id')
@@ -244,6 +330,7 @@ def update_comment(user_id: int, food_id: int, comment_id: int):
 
 # POST /foods/ratings/<food_id>
 @app.route('/foods/ratings/<int:food_id>', methods=['POST'])
+# @token_required
 def add_rating(food_id: int):
     try:
         user_id = request.json.get('user_id')
